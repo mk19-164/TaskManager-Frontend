@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -16,11 +17,29 @@ import VerifyEmail from "./pages/VerifyEmail";
 import NotFound from "./pages/NotFound";
 
 function App() {
+  const [isLogged, setIsLogged] = useState(() => Boolean(localStorage.getItem("token")));
+
+  useEffect(() => {
+    const syncAuthState = () => {
+      setIsLogged(Boolean(localStorage.getItem("token")));
+    };
+
+    syncAuthState();
+
+    window.addEventListener("storage", syncAuthState);
+    window.addEventListener("auth-changed", syncAuthState);
+
+    return () => {
+      window.removeEventListener("storage", syncAuthState);
+      window.removeEventListener("auth-changed", syncAuthState);
+    };
+  }, []);
+
   return (
     <div className="app-shell">
       <Navbar />
-      <div className="app-body">
-        <Sidebar />
+      <div className={`app-body ${isLogged ? "with-sidebar" : "without-sidebar"}`}>
+        {isLogged && <Sidebar />}
         <main className="app-content">
           <Routes>
             <Route path="/" element={<Home />} />
